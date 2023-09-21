@@ -2,18 +2,20 @@
 
 session_start();
 
-class Database {
+class Database
+{
     private static $pdo;
 
-    public static function getConnection() {
+    public static function getConnection()
+    {
         if (!self::$pdo) {
             $db_host = "localhost";
             $db_username = "root";
             $db_password = "";
             $db_name = "testdb";
-        
+
             $dsn = "mysql:host={$db_host};dbname={$db_name}";
-        
+
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
@@ -31,20 +33,23 @@ class Database {
     }
 }
 
-class User {
+class User
+{
     public $id;
     public $email;
     public $password;
 
-    public function __construct($email, $password) {
+    public function __construct($email, $password)
+    {
         $this->id = uniqid();
         $this->email = $email;
         $this->password = $password;
     }
-    
-    public function save() {
+
+    public function save()
+    {
         $pdo = Database::getConnection();
-        
+
         $query = "INSERT INTO users (id, email, password) VALUES (:id, :email, :password)";
         $stmt = $pdo->prepare($query);
         $stmt->bindParam(":id", $this->id);
@@ -57,10 +62,11 @@ class User {
             die("User save failed: " . $e->getMessage());
         }
     }
-    
-    public static function findByEmail($email) {
+
+    public static function findByEmail($email)
+    {
         $pdo = Database::getConnection();
-        
+
         $query = "SELECT * FROM users WHERE email = :email";
         $stmt = $pdo->prepare($query);
         $stmt->bindParam(":email", $email);
@@ -93,7 +99,7 @@ if ($_POST['action'] === 'register') {
         echo "Invalid email format.";
         return;
     }
-  
+
     if (strlen($password) < 6) {
         echo "Password must be at least 6 characters long.";
         return;
@@ -107,10 +113,10 @@ if ($_POST['action'] === 'register') {
     }
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-  
+
     $user = new User(
-      $email,
-      $hashedPassword
+        $email,
+        $hashedPassword
     );
 
     try {
@@ -118,7 +124,7 @@ if ($_POST['action'] === 'register') {
         echo json_encode($user);
     } catch (PDOException $e) {
         echo "Registration failed: " . $e->getMessage();
-    }  
+    }
 }
 
 if ($_POST['action'] === 'login') {
@@ -136,18 +142,18 @@ if ($_POST['action'] === 'login') {
         echo "Invalid email or password.";
         return;
     }
-  
+
     try {
         $isPasswordMatched = password_verify($password, $user->password);
 
         if (!$isPasswordMatched) {
-          echo "Invalid email or password.";
-          return;
+            echo "Invalid email or password.";
+            return;
         }
 
         $_SESSION['user_id'] = $user->id;
         echo json_encode($user);
     } catch (PDOException $e) {
         echo "Login failed: " . $e->getMessage();
-    }  
+    }
 }
